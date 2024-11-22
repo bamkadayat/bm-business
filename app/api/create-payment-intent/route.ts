@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: "2020-08-27",
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -16,11 +14,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
 
     return NextResponse.json({ clientSecret: paymentIntent.client_secret });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Internal Error:", error);
-    return NextResponse.json(
-      { error: `Internal Server Error: ${error.message}` },
-      { status: 500 }
-    );
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: `Internal Server Error: ${error.message}` },
+        { status: 500 }
+      );
+    } else {
+      return NextResponse.json(
+        { error: "Internal Server Error" },
+        { status: 500 }
+      );
+    }
   }
 }
